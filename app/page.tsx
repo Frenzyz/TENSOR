@@ -11,6 +11,7 @@ import { useState } from 'react';
 import { toast } from '@/hooks/use-toast';
 import { redirect } from 'next/dist/server/api-utils';
 import { Router } from 'lucide-react';
+import router from 'next/dist/client/router';
 
 const formSchema = z.object({
   email: z.string().email('Invalid email address'),
