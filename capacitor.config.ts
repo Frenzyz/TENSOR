@@ -1,11 +1,20 @@
-import { CapacitorConfig } from '@capacitor/cli';
+import type { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
   appId: 'com.tensor.app',
   appName: 'Tensor',
-  webDir: 'build',
+  webDir: 'dist',
   server: {
-    androidScheme: 'https'
+    cleartext: true,
+    hostname: 'localhost',
+    iosScheme: 'ionic'
+  },
+  ios: {
+    contentInset: 'automatic',
+    allowsLinkPreview: true,
+    scrollEnabled: true,
+    backgroundColor: '#ffffff',
+    limitsNavigationsToAppBoundDomains: true
   }
 };
 

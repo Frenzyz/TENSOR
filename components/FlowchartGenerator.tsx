@@ -1,4 +1,4 @@
-'use client';
+ 'use client';
 
 import React, { useState, useCallback, useEffect } from 'react';
 import ReactFlow, {
@@ -351,20 +351,14 @@ const FlowchartGenerator: React.FC<FlowchartGeneratorProps> = () => {
 
   return (
     <div className="flex flex-col h-full w-full">
-      <Card className="mb-4 w-full" style={{
-          top: 'calc(59px + env(safe-area-inset-top, 0px))',
-        }}>
-        <CardHeader>
-          <CardTitle>Tensor Flowchart Generator</CardTitle>
-          <CardDescription>Enter a natural language description to generate or edit a flowchart.</CardDescription>
-        </CardHeader>
-        <CardContent className="grid gap-4">
-          <Button 
+      <Card className="mb-4 w-full">
+				<Button 
             onClick={handleLogout} 
             variant="destructive" 
             size="sm" 
-            className="absolute top-8 right-4"
+            className="absolute top right-1"
             disabled={isLoading}
+					style={{ marginTop: '15px' }}
           >
             {isLoading ? (
               <>
@@ -375,6 +369,11 @@ const FlowchartGenerator: React.FC<FlowchartGeneratorProps> = () => {
               'Logout'
             )}
           </Button>
+        <CardHeader>
+          <CardTitle>Tensor Flowchart Generator</CardTitle>
+          <CardDescription>Enter a natural language description to generate or edit a flowchart.</CardDescription>
+        </CardHeader>
+        <CardContent className="grid gap-4">					
           <div className="grid gap-2">
             <Label htmlFor="model">Model</Label>
             <Select onValueChange={handleModelChange} defaultValue={selectedModel}>

@@ -1,0 +1,8 @@
+{
+  "appId": "com.tensor.app",
+  "appName": "Tensor",
+  "webDir": "build",
+  "server": {
+    "androidScheme": "https"
+  }
+} 

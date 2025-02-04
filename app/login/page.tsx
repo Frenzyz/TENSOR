@@ -123,14 +123,14 @@ export default function LoginScreen() {
             </Button>
 
             <div className="text-center mt-4">
-              <a href="#" className="text-sm text-primary hover:underline">
+              <a href="#" className="text-primary hover:underline">
                 Forgot password?
               </a>
             </div>
 
             <div className="text-center text-sm text-gray-600 mt-6">
               Don't have an account?{' '}
-              <a href="#" className="text-primary font-semibold hover:underline">
+              <a href="/signup" className="text-primary font-semibold hover:underline">
                 Sign up
               </a>
             </div>
