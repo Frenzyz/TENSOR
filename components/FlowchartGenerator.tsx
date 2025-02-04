@@ -11,6 +11,7 @@ import ReactFlow, {
   Node,
   Edge,
   XYPosition,
+  Connection,
 } from 'reactflow';
 import 'reactflow/dist/style.css';
 import { createDeepSeekClient } from '@/lib/deepseek-client';
@@ -93,10 +94,22 @@ const FlowchartGenerator: React.FC<FlowchartGeneratorProps> = () => {
   }, []);
 
 
-  const onConnect = useCallback((params) => setEdges((eds) => addEdge(params, eds)), [setEdges]);
+  const onConnect = useCallback(
+    (params: Connection) => setEdges((eds) => addEdge(params, eds)),
+    [setEdges]
+  );
 
 
   const handleSaveApiKey = async (values: z.infer<typeof formSchema>) => {
+    if (!values.api_key) {
+      toast({
+        title: "Error",
+        description: "API key is required",
+        variant: "destructive"
+      });
+      return;
+    }
+    
     localStorage.setItem(`${selectedModel}_api_key`, values.api_key);
     toast({
       title: "API Key Saved",
@@ -104,7 +117,7 @@ const FlowchartGenerator: React.FC<FlowchartGeneratorProps> = () => {
     });
     setApiKey(values.api_key);
     setApiKeySaved(true);
-    setTimeout(() => setApiKeySaved(false), 3000); // Reset after 3 seconds
+    setTimeout(() => setApiKeySaved(false), 3000);
   };
 
 
@@ -241,7 +254,7 @@ const FlowchartGenerator: React.FC<FlowchartGeneratorProps> = () => {
 
     try {
       const flowchartData = JSON.parse(trimmedResponse);
-      console.log("Flowchart Data from LLM:", flowchartData, "Model:", selectedModel); // Log model name
+      console.log("Flowchart Data from LLM:", flowchartData, "Model:", selectedModel);
 
       if (flowchartData.nodes && flowchartData.edges) {
         const formattedNodes = flowchartData.nodes.map((node: any) => ({
@@ -255,17 +268,18 @@ const FlowchartGenerator: React.FC<FlowchartGeneratorProps> = () => {
         setNodes(formattedNodes);
         setEdges(flowchartData.edges);
       } else {
-        console.error('Invalid flowchart data format from LLM:', flowchartData, "Model:", selectedModel); // Log model name
+        console.error('Invalid flowchart data format from LLM:', flowchartData, "Model:", selectedModel);
         alert(`Failed to generate flowchart. Invalid data format from ${selectedModel}: Missing nodes or edges.`);
       }
-    } catch (jsonError) {
-      console.error('JSON parsing error:', jsonError, jsonError.stack);
+    } catch (error: unknown) {
+      const jsonError = error as Error;
+      console.error('JSON parsing error:', jsonError);
       console.error('Raw LLM Response:', rawResponse);
       console.error('Trimmed LLM Response:', trimmedResponse);
       alert(`Failed to parse LLM response as JSON. Please check the raw response (debug button). Error details: ${jsonError.message}`);
     } finally {
       setIsLoading(false);
-      setEditPrompt(''); // Clear edit prompt after generation
+      setEditPrompt('');
     }
   };
 
@@ -345,8 +359,21 @@ const FlowchartGenerator: React.FC<FlowchartGeneratorProps> = () => {
           <CardDescription>Enter a natural language description to generate or edit a flowchart.</CardDescription>
         </CardHeader>
         <CardContent className="grid gap-4">
-          <Button onClick={handleLogout} variant="destructive" size="sm" className="absolute top-8 right-4" isLoading={isLoading}>
-            Logout
+          <Button 
+            onClick={handleLogout} 
+            variant="destructive" 
+            size="sm" 
+            className="absolute top-8 right-4"
+            disabled={isLoading}
+          >
+            {isLoading ? (
+              <>
+                <span className="mr-2">Loading...</span>
+                {/* You can add a loading spinner here if you have one */}
+              </>
+            ) : (
+              'Logout'
+            )}
           </Button>
           <div className="grid gap-2">
             <Label htmlFor="model">Model</Label>

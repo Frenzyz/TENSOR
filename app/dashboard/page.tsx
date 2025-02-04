@@ -2,7 +2,7 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { deepseek } from '@/lib/deepseek-client';
+import { createDeepSeekClient } from '@/lib/deepseek-client';
 import { dashboardSchema } from '@/lib/dashboard-schema';
 import { toast } from '@/hooks/use-toast';
 import DashboardRenderer from '@/components/dashboard-renderer';
@@ -30,12 +30,16 @@ const systemPrompt = `You are a dashboard configuration generator. Respond ONLY 
 
 export default function DashboardEngine() {
   const [input, setInput] = useState('');
-  const [dashboardConfig, setDashboardConfig] = useState(null);
+  const [dashboardConfig, setDashboardConfig] = useState<typeof dashboardSchema._output | null>(null);
   const [loading, setLoading] = useState(false);
 
   const generateDashboard = async () => {
     setLoading(true);
     try {
+      const apiKey = process.env.NEXT_PUBLIC_DEEPSEEK_API_KEY;
+      if (!apiKey) throw new Error('Deepseek API key not found');
+      
+      const deepseek = createDeepSeekClient(apiKey);
       const completion = await deepseek.chat.completions.create({
         messages: [
           { role: "system", content: systemPrompt },
@@ -45,7 +49,12 @@ export default function DashboardEngine() {
         response_format: { type: "json_object" }
       });
 
-      const rawConfig = JSON.parse(completion.choices[0].message.content);
+      const content = completion.choices[0].message.content;
+      if (!content) {
+        throw new Error("No content received from API");
+      }
+
+      const rawConfig = JSON.parse(content);
       const validatedConfig = dashboardSchema.parse(rawConfig);
       
       setDashboardConfig(validatedConfig);
@@ -57,7 +66,7 @@ export default function DashboardEngine() {
     } catch (error) {
       toast({
         title: 'Generation Error',
-        description: error.message,
+        description: error instanceof Error ? error.message : 'An unknown error occurred',
         variant: 'destructive'
       });
     } finally {
