@@ -9,6 +9,8 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@capacitor/core": "^7.0.1",
+    "@capacitor/ios": "^7.0.1",
     "@google/generative-ai": "latest",
     "@hookform/resolvers": "^3.9.0",
     "@next/swc-wasm-nodejs": "13.5.1",
@@ -78,5 +80,8 @@
   "optionalDependencies": {
     "bufferutil": "4.0.7",
     "utf-8-validate": "5.0.10"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "^7.0.1"
   }
 }
