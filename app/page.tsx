@@ -9,6 +9,8 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { supabase } from '@/lib/supabase/client';
 import { useState } from 'react';
 import { toast } from '@/hooks/use-toast';
+import { redirect } from 'next/dist/server/api-utils';
+import { Router } from 'lucide-react';
 
 const formSchema = z.object({
   email: z.string().email('Invalid email address'),
@@ -47,6 +49,7 @@ export default function LoginScreen() {
         description: 'Redirecting to your dashboard...'
       });
       // Add redirect logic here
+      router.push('/dashboard'); // Add this line
       
     } catch (error) {
       toast({
