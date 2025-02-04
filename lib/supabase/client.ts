@@ -7,6 +7,7 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   global: {
     // Disable WebSocket transport for browser compatibility
     fetch: (...args) => fetch(...args),
+    WebSocket: false,
   },
   db: {
     schema: 'public',
