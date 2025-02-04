@@ -13,4 +13,4 @@ class CustomWebView: WKWebView {
         webView.scrollView.contentInsetAdjustmentBehavior = .automatic
         webView.scrollView.bounces = true
     }
-} 
+}

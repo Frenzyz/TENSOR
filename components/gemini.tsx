@@ -1,4 +1,5 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
+import { createDeepSeekClient } from "@/lib/deepseek-client"; // Import DeepSeek client
 
 const MODEL_NAME = "gemini-1.5-flash";
 
@@ -68,6 +69,82 @@ export const generateFlowchartGemini = async (apiKey: string, promptText: string
     } else {
       alert('Failed to generate flowchart with Gemini. Please check the console for details.');
     }
+    return null;
+  }
+};
+
+
+export const generateFlowchartSVG = async (apiKey: string, flowchartJSON: string, selectedModel: string) => {
+  try {
+    let svgString = '';
+
+    if (selectedModel === 'gemini') {
+      const model = geminiClient(apiKey);
+      const prompt = `
+        Generate an SVG string that visually represents the following flowchart JSON.
+        The SVG should clearly depict the nodes and edges of the flowchart, making it easy to understand.
+        Ensure that node labels are readable and edges are clearly connecting the nodes.
+
+        Flowchart JSON:
+        ${flowchartJSON}
+
+        Example SVG structure (provide a simplified example):
+        <svg width="500" height="300" xmlns="http://www.w3.org/2000/svg">
+          <!-- Define nodes as circles or rectangles and labels as text elements -->
+          <rect x="50" y="50" width="100" height="50" stroke="black" fill="white" />
+          <text x="100" y="75" text-anchor="middle">Start</text>
+          <!-- Define edges as lines or paths with arrows -->
+          <line x1="150" y1="75" x2="250" y2="75" stroke="black" />
+        </svg>
+
+        Only respond with the SVG string, do not include any explanations or markdown formatting.
+      `;
+
+      const result = await model.generateContent(prompt);
+      svgString = result.response.text();
+
+    } else if (selectedModel === 'deepseek') {
+      const deepseekClient = createDeepSeekClient(apiKey);
+      const deepseekPrompt = `
+        Generate an SVG string that visually represents the following flowchart JSON.
+        The SVG should clearly depict the nodes and edges of the flowchart, using clear visual elements for nodes (like rectangles or circles) and edges (lines with arrows).
+        Ensure that node labels are readable and edges are clearly connecting the nodes.
+        Make the SVG visually appealing and easy to understand as a flowchart diagram.
+
+        Flowchart JSON:
+        ${flowchartJSON}
+
+        Example SVG structure (provide a simplified example - you can improve upon this):
+        <svg width="500" height="300" xmlns="http://www.w3.org/2000/svg">
+          <!-- Example Node -->
+          <rect x="50" y="50" width="120" height="60" rx="10" ry="10" style="fill:#f9f9f9;stroke:#333;stroke-width:1;" />
+          <text x="110" y="80" text-anchor="middle" style="font-size: 12px; font-family: sans-serif;">Process Step</text>
+          <!-- Example Edge -->
+          <path d="M 170 80 L 300 80" stroke="#333" stroke-width="1" marker-end="url(#arrowhead)" />
+          <defs>
+            <marker id="arrowhead" markerWidth="10" markerHeight="7" orient="auto" refX="0" refY="3.5">
+              <polygon points="0 0, 10 3.5, 0 7" fill="#333" />
+            </marker>
+          </defs>
+        </svg>
+
+        Only respond with the SVG string, do not include any explanations or markdown formatting.
+      `;
+
+      const response = await deepseekClient.chat.completions.create({
+        messages: [{ role: "user", content: deepseekPrompt }],
+        model: "deepseek-chat",
+      });
+      svgString = response.choices[0].message.content || '';
+    } else {
+      throw new Error(`Model "${selectedModel}" not supported for SVG generation yet.`);
+    }
+
+    return svgString;
+
+  } catch (error: any) {
+    console.error("Error generating SVG with LLM:", error);
+    alert(`Failed to generate SVG with ${selectedModel}. Please check the console for details.`);
     return null;
   }
 };

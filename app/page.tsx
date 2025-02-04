@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import FlowchartGenerator from '@/components/FlowchartGenerator';
 import { supabase } from '@/lib/supabase/client'; // Import supabase client
+import { ReactFlowProvider } from 'reactflow'; // Import ReactFlowProvider
 
 export default function Flow() {
   const router = useRouter();
@@ -46,7 +47,9 @@ export default function Flow() {
 
   return (
     <div style={{ width: '100vw', height: '100vh' }}>
-      <FlowchartGenerator />
+      <ReactFlowProvider> {/* Wrap FlowchartGenerator with ReactFlowProvider */}
+        <FlowchartGenerator />
+      </ReactFlowProvider>
     </div>
   );
 }

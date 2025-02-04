@@ -1,6 +1,6 @@
- 'use client';
+'use client';
 
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback, useEffect, useRef } from 'react';
 import ReactFlow, {
   MiniMap,
   Controls,
@@ -12,6 +12,8 @@ import ReactFlow, {
   Edge,
   XYPosition,
   Connection,
+  useReactFlow,
+  getRectOfNodes,
 } from 'reactflow';
 import 'reactflow/dist/style.css';
 import { createDeepSeekClient } from '@/lib/deepseek-client';
@@ -23,7 +25,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { generateFlowchartGemini } from './gemini'; // Import Gemini function
+import { generateFlowchartGemini, generateFlowchartSVG } from './gemini'; // Import Gemini functions
 import { useRouter } from 'next/navigation'; // Import useRouter
 import { useForm } from 'react-hook-form';
 import { Form, FormControl, FormField, FormItem, FormMessage } from '@/components/ui/form';
@@ -67,6 +69,7 @@ const FlowchartGenerator: React.FC<FlowchartGeneratorProps> = () => {
   const [isSaveDialogOpen, setIsSaveDialogOpen] = useState<boolean>(false);
   const [savedFlowcharts, setSavedFlowcharts] = useState<string[]>([]);
   const [isNewFlowchart, setIsNewFlowchart] = useState<boolean>(true); // Track if it's a new flowchart or loaded one
+  const reactFlowInstance = useReactFlow();
 
 
   const form = useForm<z.infer<typeof formSchema>>({
@@ -109,7 +112,7 @@ const FlowchartGenerator: React.FC<FlowchartGeneratorProps> = () => {
       });
       return;
     }
-    
+
     localStorage.setItem(`${selectedModel}_api_key`, values.api_key);
     toast({
       title: "API Key Saved",
@@ -348,14 +351,53 @@ const FlowchartGenerator: React.FC<FlowchartGeneratorProps> = () => {
     setSavedFlowcharts(flowchartKeys);
   };
 
+  const handleSVGExport = useCallback(async () => {
+    setIsLoading(true);
+    try {
+      const flowchartJSON = JSON.stringify({ nodes, edges });
+      const svg = await generateFlowchartSVG(apiKey, flowchartJSON, selectedModel);
+
+      if (svg) {
+        const svgBlob = new Blob([svg], { type: 'image/svg+xml' });
+        const url = URL.createObjectURL(svgBlob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `${flowchartName || 'flowchart'}.svg`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        toast({
+          title: "SVG Exported",
+          description: `Flowchart has been exported as SVG. You can import this SVG file into Microsoft Visio.`,
+        });
+      } else {
+        toast({
+          title: "Export Failed",
+          description: "Failed to export flowchart as SVG.",
+          variant: "destructive"
+        });
+      }
+    } catch (error) {
+      console.error('SVG export error:', error);
+      toast({
+        title: "Export Error",
+        description: "An error occurred during SVG export.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  }, [reactFlowInstance, nodes, edges, flowchartName, toast, setIsLoading, apiKey, selectedModel]);
+
 
   return (
     <div className="flex flex-col h-full w-full">
       <Card className="mb-4 w-full">
-				<Button 
-            onClick={handleLogout} 
-            variant="destructive" 
-            size="sm" 
+				<Button
+            onClick={handleLogout}
+            variant="destructive"
+            size="sm"
             className="absolute top right-1"
             disabled={isLoading}
 					style={{ marginTop: '15px' }}
@@ -373,7 +415,7 @@ const FlowchartGenerator: React.FC<FlowchartGeneratorProps> = () => {
           <CardTitle>Tensor Flowchart Generator</CardTitle>
           <CardDescription>Enter a natural language description to generate or edit a flowchart.</CardDescription>
         </CardHeader>
-        <CardContent className="grid gap-4">					
+        <CardContent className="grid gap-4">
           <div className="grid gap-2">
             <Label htmlFor="model">Model</Label>
             <Select onValueChange={handleModelChange} defaultValue={selectedModel}>
@@ -471,6 +513,9 @@ const FlowchartGenerator: React.FC<FlowchartGeneratorProps> = () => {
             </DropdownMenu>
             <Button variant="secondary" size="sm" onClick={handleSaveFlowchart} disabled={isLoading}>
               Save
+            </Button>
+            <Button variant="secondary" size="sm" onClick={handleSVGExport} disabled={isLoading}>
+              Export SVG
             </Button>
             <Dialog open={showRawResponse} onOpenChange={setShowRawResponse}>
               <DialogTrigger asChild>
